@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HXP Trip 5 – Belize Belmopan | Builder Call Signup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:       #1a6b3c;
+      --brand-light: #e8f5ee;
+      --brand-dark:  #134f2d;
+      --accent:      #f0a500;
+      --danger:      #c0392b;
+      --taken:       #e8e8e8;
+      --taken-text:  #888;
+      --radius:      10px;
+      --shadow:      0 2px 12px rgba(0,0,0,.10);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f4f6f4;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--brand);
+      color: #fff;
+      padding: 20px 16px 16px;
+      text-align: center;
+    }
+    header h1 { font-size: clamp(1.2rem, 4vw, 1.8rem); font-weight: 700; }
+    header p  { font-size: .9rem; opacity: .85; margin-top: 4px; }
+
+    /* ── CLAIMED BANNER ── */
+    #claimed-banner {
+      display: none;
+      background: var(--accent);
+      color: #1a1a1a;
+      font-weight: 600;
+      text-align: center;
+      padding: 12px 16px;
+      font-size: .95rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    }
+
+    /* ── CONTROLS ── */
+    #controls {
+      max-width: 600px;
+      margin: 20px auto 0;
+      padding: 0 16px;
+    }
+    #controls label { display: block; font-weight: 600; margin-bottom: 6px; font-size: .9rem; }
+    #name-select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #ccc;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      background: #fff;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23555' d='M0 0l6 8 6-8z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+    }
+    #name-select:focus { outline: none; border-color: var(--brand); }
+
+    #refresh-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: .82rem;
+      color: #666;
+    }
+    #refresh-btn {
+      background: none;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: .82rem;
+      cursor: pointer;
+      color: var(--brand);
+      font-weight: 600;
+    }
+    #refresh-btn:hover { background: var(--brand-light); }
+    #last-updated { margin-left: auto; }
+
+    /* ── SESSIONS ── */
+    #sessions {
+      max-width: 600px;
+      margin: 16px auto 40px;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .session-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .session-header {
+      background: var(--brand);
+      color: #fff;
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .session-header span { font-size: .8rem; opacity: .8; font-weight: 400; }
+
+    .slot-list { list-style: none; }
+    .slot-item {
+      display: flex;
+      align-items: center;
+      padding: 11px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 12px;
+      transition: background .15s;
+    }
+    .slot-item:last-child { border-bottom: none; }
+
+    .slot-time {
+      font-weight: 600;
+      font-size: .88rem;
+      width: 68px;
+      flex-shrink: 0;
+      color: #333;
+    }
+
+    .slot-name {
+      flex: 1;
+      font-size: .9rem;
+      color: #555;
+    }
+    .slot-name.mine { color: var(--brand); font-weight: 600; }
+    .slot-name.empty { color: #aaa; font-style: italic; }
+
+    /* Slot action button */
+    .slot-btn {
+      border: none;
+      border-radius: 7px;
+      padding: 7px 14px;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+    .slot-btn:active { transform: scale(.97); }
+    .slot-btn:disabled { opacity: .45; cursor: default; }
+
+    .btn-claim   { background: var(--brand); color: #fff; }
+    .btn-claim:hover:not(:disabled)  { background: var(--brand-dark); }
+    .btn-cancel  { background: var(--danger); color: #fff; }
+    .btn-cancel:hover:not(:disabled) { opacity: .85; }
+    .btn-change  { background: var(--accent); color: #1a1a1a; }
+    .btn-change:hover:not(:disabled) { opacity: .85; }
+
+    /* taken row */
+    .slot-item.taken { background: #fafafa; }
+    .slot-item.taken .slot-time { color: #999; }
+
+    /* mine row */
+    .slot-item.mine-row { background: var(--brand-light); }
+
+    /* ── LOADING ── */
+    #loading {
+      text-align: center;
+      padding: 40px;
+      color: #888;
+      font-size: .95rem;
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #222;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-size: .88rem;
+      font-weight: 500;
+      pointer-events: none;
+      transition: transform .3s ease, opacity .3s ease;
+      opacity: 0;
+      z-index: 100;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.success { background: var(--brand); }
+    #toast.error   { background: var(--danger); }
+
+    footer {
+      text-align: center;
+      font-size: .78rem;
+      color: #aaa;
+      padding: 0 16px 24px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>HXP Trip 5 – Belize Belmopan</h1>
+  <p>Builder Call Signup &nbsp;·&nbsp; 20-min slots &nbsp;·&nbsp; All times Mountain</p>
+</header>
+
+<div id="claimed-banner"></div>
+
+<div id="controls">
+  <label for="name-select">Select your name to claim or manage a slot:</label>
+  <select id="name-select">
+    <option value="">— choose your name —</option>
+    <option>Madison Herbst</option>
+    <option>Ronin Bender</option>
+    <option>Sarah Landvatter</option>
+    <option>Carma Jenkins</option>
+    <option>Dax Phelps</option>
+    <option>Joshua Nelson</option>
+    <option>Zackery Quarnberg</option>
+    <option>Mollie Shippen</option>
+    <option>Carli Call</option>
+    <option>Audrey Sperry</option>
+    <option>Blakely Hartley</option>
+    <option>Jayson Rigby</option>
+    <option>Nixon Spear</option>
+    <option>Tayla Johnson</option>
+    <option>Tanner Pratt</option>
+    <option>Cora McIllece</option>
+    <option>Avalon Fenlon</option>
+    <option>Tysen Shelby</option>
+    <option>Delanie Holman</option>
+    <option>Jan Bender</option>
+    <option>Wenda Johnson</option>
+  </select>
+
+  <div id="refresh-row">
+    <button id="refresh-btn" onclick="loadSlots()">↻ Refresh</button>
+    <span>Auto-refreshes every 30 s</span>
+    <span id="last-updated"></span>
+  </div>
+</div>
+
+<div id="sessions">
+  <div id="loading">Loading slots…</div>
+</div>
+
+<div id="toast"></div>
+
+<footer>HXP · Trip 5 Belize Belmopan · Builder Calls</footer>
+
+<script>
+  const BIN_ID  = '6a0b67946877513b27930ab1';
+  const API_KEY = '$2a$10$T0oR132gQyWqowRQEQHttuxhXPCIII442SEOnXWsZtmp2y5qeTini';
+  const BASE    = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+
+  const SESSION_ORDER = ['thu-may21','sun-may24','thu-may28','sun-may31'];
+  const SESSION_META  = {
+    'thu-may21': { label: 'Thursday, May 21', sub: '5:00 – 7:00 pm MT' },
+    'sun-may24': { label: 'Sunday, May 24',   sub: '1:00 – 4:00 pm MT' },
+    'thu-may28': { label: 'Thursday, May 28', sub: '5:00 – 7:00 pm MT' },
+    'sun-may31': { label: 'Sunday, May 31',   sub: '1:00 – 4:00 pm MT' },
+  };
+
+  let currentData = null;
+  let isSaving    = false;
+
+  /* ── helpers ── */
+  function myName() { return document.getElementById('name-select').value; }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = 'show ' + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  function updateBanner() {
+    if (!currentData) return;
+    const name   = myName();
+    const banner = document.getElementById('claimed-banner');
+    if (!name) { banner.style.display = 'none'; return; }
+
+    let found = null;
+    for (const sid of SESSION_ORDER) {
+      const times = currentData.slots[sid]?.times || {};
+      for (const [time, who] of Object.entries(times)) {
+        if (who === name) { found = { session: SESSION_META[sid].label, time }; break; }
+      }
+      if (found) break;
+    }
+
+    if (found) {
+      banner.style.display = 'block';
+      banner.textContent   = `✅ You have a slot: ${found.session} at ${found.time} MT`;
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  /* ── fetch ── */
+  async function loadSlots() {
+    try {
+      const res  = await fetch(BASE + '/latest', {
+        headers: { 'X-Master-Key': API_KEY }
+      });
+      const json = await res.json();
+      currentData = json.record;
+      renderSessions();
+      document.getElementById('last-updated').textContent =
+        'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      console.error(e);
+      showToast('Could not load slots — check connection', 'error');
+    }
+  }
+
+  /* ── save ── */
+  async function saveData() {
+    const res = await fetch(BASE, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify(currentData)
+    });
+    if (!res.ok) throw new Error('Save failed: ' + res.status);
+  }
+
+  /* ── actions ── */
+  async function claimSlot(sessionId, time) {
+    const name = myName();
+    if (!name) { showToast('Please select your name first', 'error'); return; }
+    if (isSaving) return;
+
+    // re-fetch to check race condition
+    await loadSlots();
+    const current = currentData.slots[sessionId]?.times[time];
+    if (current && current !== name) {
+      showToast('That slot was just taken — pick another!', 'error');
+      return;
+    }
+
+    // check if user already has a slot elsewhere
+    const existing = findMySlot(name);
+    if (existing && !(existing.session === sessionId && existing.time === time)) {
+      // cancel old slot first
+      currentData.slots[existing.session].times[existing.time] = null;
+    }
+
+    currentData.slots[sessionId].times[time] = name;
+
+    isSaving = true;
+    setAllButtons(true);
+    try {
+      await saveData();
+      showToast('Slot claimed!', 'success');
+    } catch (e) {
+      showToast('Error saving — please try again', 'error');
+    } finally {
+      isSaving = false;
+    }
+    renderSessions();
+  }
+
+  async function cancelSlot(sessionId, time) {
+    const name = myName();
+    if (!name || isSaving) return;
+
+    await loadSlots();
+    currentData.slots[sessionId].times[time] = null;
+
+    isSaving = true;
+    setAllButtons(true);
+    try {
+      await saveData();
+      showToast('Slot cancelled.', '');
+    } catch (e) {
+      showToast('Error saving — please try again', 'error');
+    } finally {
+      isSaving = false;
+    }
+    renderSessions();
+  }
+
+  function findMySlot(name) {
+    if (!currentData) return null;
+    for (const sid of SESSION_ORDER) {
+      const times = currentData.slots[sid]?.times || {};
+      for (const [t, who] of Object.entries(times)) {
+        if (who === name) return { session: sid, time: t };
+      }
+    }
+    return null;
+  }
+
+  function setAllButtons(disabled) {
+    document.querySelectorAll('.slot-btn').forEach(b => b.disabled = disabled);
+  }
+
+  /* ── render ── */
+  function renderSessions() {
+    const name      = myName();
+    const container = document.getElementById('sessions');
+    container.innerHTML = '';
+
+    for (const sid of SESSION_ORDER) {
+      const meta  = SESSION_META[sid];
+      const sdata = currentData?.slots[sid] || {};
+      const times = sdata.times || {};
+
+      const card = document.createElement('div');
+      card.className = 'session-card';
+
+      card.innerHTML = `
+        <div class="session-header">
+          ${meta.label}
+          <span>${meta.sub}</span>
+        </div>
+        <ul class="slot-list"></ul>
+      `;
+
+      const ul = card.querySelector('.slot-list');
+
+      for (const [time, who] of Object.entries(times)) {
+        const isMe   = who === name && !!name;
+        const isFree = who === null || who === undefined || who === '';
+
+        const li = document.createElement('li');
+        li.className = 'slot-item' +
+          (isMe ? ' mine-row' : (!isFree ? ' taken' : ''));
+
+        let nameHtml, btn;
+
+        if (isMe) {
+          nameHtml = `<span class="slot-name mine">You (${name})</span>`;
+          btn = `<button class="slot-btn btn-cancel"
+                  onclick="cancelSlot('${sid}','${time}')">Cancel</button>`;
+        } else if (isFree) {
+          nameHtml = `<span class="slot-name empty">Available</span>`;
+          btn = name
+            ? `<button class="slot-btn btn-claim"
+                onclick="claimSlot('${sid}','${time}')">Claim</button>`
+            : `<button class="slot-btn btn-claim" disabled>Claim</button>`;
+        } else {
+          nameHtml = `<span class="slot-name">${who}</span>`;
+          // If user already has a slot elsewhere, show "Move here" for taken slots too?
+          // Keep it simple: user can only claim free slots.
+          btn = `<button class="slot-btn" disabled style="background:#e0e0e0;color:#999">Taken</button>`;
+        }
+
+        li.innerHTML = `<span class="slot-time">${time}</span>${nameHtml}${btn}`;
+        ul.appendChild(li);
+      }
+
+      container.appendChild(card);
+    }
+
+    updateBanner();
+  }
+
+  /* ── name change ── */
+  document.getElementById('name-select').addEventListener('change', () => {
+    renderSessions();
+  });
+
+  /* ── init ── */
+  loadSlots();
+  setInterval(loadSlots, 30000);
+</script>
+
+</body>
+</html>
