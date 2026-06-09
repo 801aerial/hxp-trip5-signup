@@ -264,7 +264,9 @@
 <footer>HXP · Trip 4 Belize Belmopan · Builder Calls</footer>
 
 <script>
-  const BASE = 'https://jsonblob.com/api/jsonBlob/019eaab0-047d-75ec-9fd0-c28ec83e289a';
+  const BIN_ID  = '6a279c78da38895dfe9e05d2';
+  const API_KEY = '$2a$10$nbqiLdIUjkl1CWydeMLtROzdyRS6k8EkkeAT/VHgpCMiXTTF.CBW2';
+  const BASE    = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
 
   const SESSION_ORDER = ['sat-jun14','sun-jun15'];
   const SESSION_META  = {
@@ -312,9 +314,11 @@
   /* ── fetch ── */
   async function loadSlots() {
     try {
-      const res  = await fetch(BASE);
+      const res  = await fetch(BASE + '/latest', {
+        headers: { 'X-Master-Key': API_KEY }
+      });
       const json = await res.json();
-      currentData = json;
+      currentData = json.record;
       renderSessions();
       document.getElementById('last-updated').textContent =
         'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -328,7 +332,10 @@
   async function saveData() {
     const res = await fetch(BASE, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
       body: JSON.stringify(currentData)
     });
     if (!res.ok) throw new Error('Save failed: ' + res.status);
